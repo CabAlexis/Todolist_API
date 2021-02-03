@@ -25,7 +25,7 @@ class Category
     private $title;
 
     /**
-     * @ORM\ManyToMany(targetEntity=todolist::class, inversedBy="categories")
+     * @ORM\OneToMany(targetEntity=Todolist::class, mappedBy="category")
      */
     private $todolists;
 
@@ -52,25 +52,31 @@ class Category
     }
 
     /**
-     * @return Collection|todolist[]
+     * @return Collection|Todolist[]
      */
     public function getTodolists(): Collection
     {
         return $this->todolists;
     }
 
-    public function addTodolist(todolist $todolist): self
+    public function addTodolist(Todolist $todolist): self
     {
         if (!$this->todolists->contains($todolist)) {
             $this->todolists[] = $todolist;
+            $todolist->setCategory($this);
         }
 
         return $this;
     }
 
-    public function removeTodolist(todolist $todolist): self
+    public function removeTodolist(Todolist $todolist): self
     {
-        $this->todolists->removeElement($todolist);
+        if ($this->todolists->removeElement($todolist)) {
+            // set the owning side to null (unless already changed)
+            if ($todolist->getCategory() === $this) {
+                $todolist->setCategory(null);
+            }
+        }
 
         return $this;
     }

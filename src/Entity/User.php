@@ -26,13 +26,13 @@ class User
     private $username;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Item::class, mappedBy="users")
+     * @ORM\OneToMany(targetEntity=Item::class, mappedBy="userItem")
      */
-    private $items;
+    private $Items;
 
     public function __construct()
     {
-        $this->items = new ArrayCollection();
+        $this->Items = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -57,14 +57,14 @@ class User
      */
     public function getItems(): Collection
     {
-        return $this->items;
+        return $this->Items;
     }
 
     public function addItem(Item $item): self
     {
-        if (!$this->items->contains($item)) {
-            $this->items[] = $item;
-            $item->addUser($this);
+        if (!$this->Items->contains($item)) {
+            $this->Items[] = $item;
+            $item->setUserItem($this);
         }
 
         return $this;
@@ -72,8 +72,11 @@ class User
 
     public function removeItem(Item $item): self
     {
-        if ($this->items->removeElement($item)) {
-            $item->removeUser($this);
+        if ($this->Items->removeElement($item)) {
+            // set the owning side to null (unless already changed)
+            if ($item->getUserItem() === $this) {
+                $item->setUserItem(null);
+            }
         }
 
         return $this;

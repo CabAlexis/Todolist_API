@@ -30,20 +30,14 @@ class Item
     private $status;
 
     /**
-     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="items")
+     * @ORM\ManyToOne(targetEntity=Todolist::class, inversedBy="items")
      */
-    private $users;
+    private $todolist;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Todolist::class, inversedBy="items")
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="Items")
      */
-    private $todolists;
-
-    public function __construct()
-    {
-        $this->users = new ArrayCollection();
-        $this->todolists = new ArrayCollection();
-    }
+    private $userItem;
 
     public function getId(): ?int
     {
@@ -74,50 +68,26 @@ class Item
         return $this;
     }
 
-    /**
-     * @return Collection|User[]
-     */
-    public function getUsers(): Collection
+    public function getTodolist(): ?Todolist
     {
-        return $this->users;
+        return $this->todolist;
     }
 
-    public function addUser(User $user): self
+    public function setTodolist(?Todolist $todolist): self
     {
-        if (!$this->users->contains($user)) {
-            $this->users[] = $user;
-        }
+        $this->todolist = $todolist;
 
         return $this;
     }
 
-    public function removeUser(User $user): self
+    public function getUserItem(): ?User
     {
-        $this->users->removeElement($user);
-
-        return $this;
+        return $this->userItem;
     }
 
-    /**
-     * @return Collection|Todolist[]
-     */
-    public function getTodolists(): Collection
+    public function setUserItem(?User $userItem): self
     {
-        return $this->todolists;
-    }
-
-    public function addTodolist(Todolist $todolist): self
-    {
-        if (!$this->todolists->contains($todolist)) {
-            $this->todolists[] = $todolist;
-        }
-
-        return $this;
-    }
-
-    public function removeTodolist(Todolist $todolist): self
-    {
-        $this->todolists->removeElement($todolist);
+        $this->userItem = $userItem;
 
         return $this;
     }

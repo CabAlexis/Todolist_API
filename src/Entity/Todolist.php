@@ -35,18 +35,17 @@ class Todolist
     private $createdAt;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Category::class, mappedBy="todolists")
-     */
-    private $categories;
-
-    /**
-     * @ORM\ManyToMany(targetEntity=Item::class, mappedBy="todolists")
+     * @ORM\OneToMany(targetEntity=Item::class, mappedBy="todolist")
      */
     private $items;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Category::class, inversedBy="todolists")
+     */
+    private $category;
+
     public function __construct()
     {
-        $this->categories = new ArrayCollection();
         $this->items = new ArrayCollection();
     }
 
@@ -92,33 +91,6 @@ class Todolist
     }
 
     /**
-     * @return Collection|Category[]
-     */
-    public function getCategories(): Collection
-    {
-        return $this->categories;
-    }
-
-    public function addCategory(Category $category): self
-    {
-        if (!$this->categories->contains($category)) {
-            $this->categories[] = $category;
-            $category->addTodolist($this);
-        }
-
-        return $this;
-    }
-
-    public function removeCategory(Category $category): self
-    {
-        if ($this->categories->removeElement($category)) {
-            $category->removeTodolist($this);
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection|Item[]
      */
     public function getItems(): Collection
@@ -130,7 +102,7 @@ class Todolist
     {
         if (!$this->items->contains($item)) {
             $this->items[] = $item;
-            $item->addTodolist($this);
+            $item->setTodolist($this);
         }
 
         return $this;
@@ -139,8 +111,23 @@ class Todolist
     public function removeItem(Item $item): self
     {
         if ($this->items->removeElement($item)) {
-            $item->removeTodolist($this);
+            // set the owning side to null (unless already changed)
+            if ($item->getTodolist() === $this) {
+                $item->setTodolist(null);
+            }
         }
+
+        return $this;
+    }
+
+    public function getCategory(): ?Category
+    {
+        return $this->category;
+    }
+
+    public function setCategory(?Category $category): self
+    {
+        $this->category = $category;
 
         return $this;
     }
