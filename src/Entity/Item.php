@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ItemRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -26,6 +28,16 @@ class Item
      * @ORM\Column(type="boolean")
      */
     private $status;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Todolist::class, inversedBy="items")
+     */
+    private $todolist;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="Items")
+     */
+    private $userItem;
 
     public function getId(): ?int
     {
@@ -52,6 +64,30 @@ class Item
     public function setStatus(bool $status): self
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getTodolist(): ?Todolist
+    {
+        return $this->todolist;
+    }
+
+    public function setTodolist(?Todolist $todolist): self
+    {
+        $this->todolist = $todolist;
+
+        return $this;
+    }
+
+    public function getUserItem(): ?User
+    {
+        return $this->userItem;
+    }
+
+    public function setUserItem(?User $userItem): self
+    {
+        $this->userItem = $userItem;
 
         return $this;
     }
