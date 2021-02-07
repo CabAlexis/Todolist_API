@@ -2,18 +2,18 @@
 
 namespace App\Controller;
 
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 interface InterfaceController
 {
-    public function getEntity(): Response;
+    public function getEntity(): JsonResponse;
 
-    public function getOneEntity($arg): Response;
+    public function getOneEntity($arg): JsonResponse;
 
-    public function createEntity(Request $request): Response;
+    public function createEntity($arg): JsonResponse;
 
-    public function updateEntity($arg, Request $request): Response;
+    public function updateEntity($arg, $entity): JsonResponse;
 
-    public function deleteEntity($arg): Response;
+    public function deleteEntity($arg): JsonResponse;
 }
