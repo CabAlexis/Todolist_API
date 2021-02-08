@@ -5,8 +5,6 @@ namespace App\Controller;
 use App\Entity\Category;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 abstract class BaseController extends AbstractController implements InterfaceController
 {
@@ -23,13 +21,13 @@ abstract class BaseController extends AbstractController implements InterfaceCon
     public function getEntity(): JsonResponse
     {   
         $data = $this->getDoctrine()->getManager()->getRepository($this->entity)->findAll();
-        return $this->json($data);
+        return $this->json($data, 200, [], ['groups' => 'category']);
     }
 
     public function getOneEntity($id): JsonResponse
     {
         $entity = $this->getDoctrine()->getManager()->getRepository(Category::class)->find($id);
-        return $this->json($entity);
+        return $this->json($entity, 200, [], ['groups' => 'category']);
     }
 
     public function createEntity($entity): JsonResponse

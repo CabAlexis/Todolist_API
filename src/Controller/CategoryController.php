@@ -8,7 +8,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
-use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -44,7 +43,7 @@ class CategoryController extends BaseController
         try {
             $data = $request->getContent();
 
-            $entity = $serializer->deserialize($data, Category::class, 'json');
+            $entity = $serializer->deserialize($data, Category::class, 'json', ['groups' => 'category']);
 
             $errors = $validator->validate($entity);
 
@@ -63,13 +62,28 @@ class CategoryController extends BaseController
     /**
      * @Route("/category/{id}", name="category_update", methods={"PUT"})
      */
-    public function updateCategory($id, Request $request): JsonResponse
+    public function updateCategory($id, Request $request, ValidatorInterface $validator): JsonResponse
     {
-        $entity = $this->getDoctrine()->getManager()->getRepository(Category::class)->find($id);
-        $data = json_decode($request->getContent());
-        $entity->setTitle($data->title);
 
-        return BaseController::updateEntity($id, $entity);
+        $entity = $this->getDoctrine()->getManager()->getRepository(Category::class)->find($id);
+
+        try {
+            $data = json_decode($request->getContent());
+
+            $entity->setTitle($data->title);
+
+            $errors = $validator->validate($entity);
+
+            if(count($errors) > 0){
+                return $this->json($errors, 400);
+            }
+            return BaseController::updateEntity($id, $entity);
+        }catch(NotEncodableValueException $e){
+            return $this->json([
+                'status' => 400,
+                'message' => $e->getMessage()
+            ]);
+        } 
     }
 
     /**
