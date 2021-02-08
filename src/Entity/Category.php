@@ -23,10 +23,6 @@ class Category
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Assert\Type(
-     *         type="string",
-     *         message="The value {{ value }} is not a valid {{ type }}."         
-     * )
      * @Assert\NotBlank(message="Le titre est obligatoire")
      * @Groups("category")
      */

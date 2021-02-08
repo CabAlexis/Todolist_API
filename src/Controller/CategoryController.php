@@ -43,13 +43,17 @@ class CategoryController extends BaseController
         try {
             $data = $request->getContent();
 
+            $verif = json_decode($data);
+
+            if(isset($verif->title) && !is_string($verif->title)){
+                return $this->json([
+                    'status' => 400,
+                    'message' => 'Le titre doit obligatoirement etre une chaine de caractere.'
+                ]);
+            }
+
             $entity = $serializer->deserialize($data, Category::class, 'json', ['groups' => 'category']);
 
-            $errors = $validator->validate($entity);
-
-            if(count($errors) > 0){
-                return $this->json($errors, 400);
-            }
             return BaseController::createEntity($entity);
         }catch(NotEncodableValueException $e){
             return $this->json([
@@ -70,13 +74,13 @@ class CategoryController extends BaseController
         try {
             $data = json_decode($request->getContent());
 
-            $entity->setTitle($data->title);
-
-            $errors = $validator->validate($entity);
-
-            if(count($errors) > 0){
-                return $this->json($errors, 400);
+            if(isset($data->title) && !is_string($data->title)){
+                return $this->json([
+                    'status' => 400,
+                    'message' => 'Le titre doit obligatoirement etre une chaine de caractere.'
+                ]);
             }
+            $entity->setTitle($data->title);
             return BaseController::updateEntity($id, $entity);
         }catch(NotEncodableValueException $e){
             return $this->json([
