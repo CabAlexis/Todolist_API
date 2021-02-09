@@ -18,16 +18,16 @@ abstract class BaseController extends AbstractController implements InterfaceCon
         $this->em = $em;
     }
 
-    public function getEntity(): JsonResponse
+    public function getEntity($groups): JsonResponse
     {   
         $data = $this->getDoctrine()->getManager()->getRepository($this->entity)->findAll();
-        return $this->json($data, 200, [], ['groups' => 'category']);
+        return $this->json($data, 200, [], $groups);
     }
 
-    public function getOneEntity($id): JsonResponse
+    public function getOneEntity($id, $groups): JsonResponse
     {
-        $entity = $this->getDoctrine()->getManager()->getRepository(Category::class)->find($id);
-        return $this->json($entity, 200, [], ['groups' => 'category']);
+        $entity = $this->getDoctrine()->getManager()->getRepository($this->entity)->find($id);
+        return $this->json($entity, 200, [], $groups);
     }
 
     public function createEntity($entity): JsonResponse
@@ -38,7 +38,7 @@ abstract class BaseController extends AbstractController implements InterfaceCon
             return $this->json($entity, 201);
     }
 
-    public function updateEntity($id, $entity): JsonResponse
+    public function updateEntity($id, $entity, $groups): JsonResponse
     {
         $em = $this->getDoctrine()->getManager();
         $em->persist($entity);
@@ -48,7 +48,7 @@ abstract class BaseController extends AbstractController implements InterfaceCon
 
     public function deleteEntity($id): JsonResponse
     {
-        $entity = $this->getDoctrine()->getManager()->getRepository(Category::class)->find($id);
+        $entity = $this->getDoctrine()->getManager()->getRepository($this->entity)->find($id);
         $em = $this->getDoctrine()->getManager();
         $em->remove($entity);
         $em->flush();
