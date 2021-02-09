@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CategoryController extends BaseController
 {
@@ -24,7 +23,8 @@ class CategoryController extends BaseController
      */
     public function getCategories(): JsonResponse
     {
-        return BaseController::getEntity();
+        $groups = ['groups' => 'category'];
+        return BaseController::getEntity($groups);
     }
 
     /**
@@ -32,13 +32,14 @@ class CategoryController extends BaseController
      */
     public function getOneCategory($id): JsonResponse
     {
-        return BaseController::getOneEntity($id);
+        $groups = ['groups' => 'category'];
+        return BaseController::getOneEntity($id, $groups);
     }
 
     /**
      * @Route("/category", name="category_create", methods={"POST"})
      */
-    public function createCategory(Request $request, ValidatorInterface $validator, SerializerInterface $serializer): JsonResponse
+    public function createCategory(Request $request, SerializerInterface $serializer): JsonResponse
     {
         try {
             $data = $request->getContent();
@@ -66,9 +67,10 @@ class CategoryController extends BaseController
     /**
      * @Route("/category/{id}", name="category_update", methods={"PUT"})
      */
-    public function updateCategory($id, Request $request, ValidatorInterface $validator): JsonResponse
+    public function updateCategory($id, Request $request): JsonResponse
     {
 
+        $groups = ['groups' => 'category'];
         $entity = $this->getDoctrine()->getManager()->getRepository(Category::class)->find($id);
 
         try {
@@ -81,7 +83,7 @@ class CategoryController extends BaseController
                 ]);
             }
             $entity->setTitle($data->title);
-            return BaseController::updateEntity($id, $entity);
+            return BaseController::updateEntity($id, $entity, $groups);
         }catch(NotEncodableValueException $e){
             return $this->json([
                 'status' => 400,
