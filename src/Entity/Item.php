@@ -17,30 +17,32 @@ class Item
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups("user")
+     * @Groups({"user", "item"})
      * 
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups("user")
+     * @Groups({"user", "item"})
      */
     private $title;
 
     /**
      * @ORM\Column(type="boolean")
-     * @Groups("user")
+     * @Groups({"user", "item"})
      */
     private $status;
 
     /**
      * @ORM\ManyToOne(targetEntity=Todolist::class, inversedBy="items")
+     * @Groups({"user", "item"})
      */
     private $todolist;
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="Items")
+     * @Groups({"item"})
      */
     private $userItem;
 

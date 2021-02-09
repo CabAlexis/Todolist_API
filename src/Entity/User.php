@@ -18,20 +18,20 @@ class User
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups("user")
+     * @Groups({"user", "item"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank(message="Le username est obligatoire")
-     * @Groups("user")
+     * @Groups({"user", "item"})
      */
     private $username;
 
     /**
      * @ORM\OneToMany(targetEntity=Item::class, mappedBy="userItem")
-     * @Groups("user")
+     * @Groups({"user"})
      */
     private $Items;
 
