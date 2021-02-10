@@ -43,7 +43,7 @@ abstract class BaseController extends AbstractController implements InterfaceCon
         $em = $this->getDoctrine()->getManager();
         $em->persist($entity);
         $em->flush();
-        return $this->json($entity);
+        return $this->json($entity, 200, [], $groups);
     }
 
     public function deleteEntity($id): JsonResponse

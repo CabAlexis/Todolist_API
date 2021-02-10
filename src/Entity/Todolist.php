@@ -17,25 +17,25 @@ class Todolist
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups("category")
+     * @Groups({"category", "item"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups("category")
+     * @Groups({"category", "item"})
      */
     private $title;
 
     /**
      * @ORM\Column(type="text")
-     * @Groups("category")
+     * @Groups({"category", "item"})
      */
     private $description;
 
     /**
      * @ORM\Column(type="datetime")
-     * @Groups("category")
+     * @Groups({"category"})
      */
     private $createdAt;
 
