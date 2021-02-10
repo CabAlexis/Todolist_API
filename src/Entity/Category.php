@@ -18,20 +18,20 @@ class Category
      * @ORM\Id
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
-     * @Groups("category")
+     * @Groups({"category"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @Assert\NotBlank(message="Le titre est obligatoire")
-     * @Groups("category")
+     * @Groups({"category"})
      */
     private $title;
 
     /**
      * @ORM\OneToMany(targetEntity=Todolist::class, mappedBy="category")
-     * @Groups("category")
+     * @Groups({"category"})
      */
     private $todolists;
 
