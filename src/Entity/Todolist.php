@@ -17,19 +17,19 @@ class Todolist
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"category", "item"})
+     * @Groups({"category", "item", "todolist"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"category", "item"})
+     * @Groups({"category", "item", "todolist"})
      */
     private $title;
 
     /**
      * @ORM\Column(type="text")
-     * @Groups({"category", "item"})
+     * @Groups({"category", "item", "todolist"})
      */
     private $description;
 
@@ -40,12 +40,14 @@ class Todolist
     private $createdAt;
 
     /**
-     * @ORM\OneToMany(targetEntity=Item::class, mappedBy="todolist")
+     * @ORM\OneToMany(targetEntity=Item::class, mappedBy="todolist", cascade={"persist"})
+     * @Groups({"todolist"})
      */
     private $items;
 
     /**
      * @ORM\ManyToOne(targetEntity=Category::class, inversedBy="todolists")
+     * @Groups({"todolist"})
      */
     private $category;
 
