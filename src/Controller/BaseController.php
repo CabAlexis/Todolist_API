@@ -18,19 +18,19 @@ abstract class BaseController extends AbstractController implements InterfaceCon
         $this->em = $em;
     }
 
-    public function getEntity($groups): JsonResponse
+    protected function getEntity($groups): JsonResponse
     {   
         $data = $this->getDoctrine()->getManager()->getRepository($this->entity)->findAll();
         return $this->json($data, 200, [], $groups);
     }
 
-    public function getOneEntity($id, $groups): JsonResponse
+    protected function getOneEntity($id, $groups): JsonResponse
     {
         $entity = $this->getDoctrine()->getManager()->getRepository($this->entity)->find($id);
         return $this->json($entity, 200, [], $groups);
     }
 
-    public function createEntity($entity): JsonResponse
+    protected function createEntity($entity): JsonResponse
     {
             $em = $this->getDoctrine()->getManager();
             $em->persist($entity);
@@ -38,7 +38,7 @@ abstract class BaseController extends AbstractController implements InterfaceCon
             return $this->json($entity, 201);
     }
 
-    public function updateEntity($id, $entity, $groups): JsonResponse
+    protected function updateEntity($id, $entity, $groups): JsonResponse
     {
         $em = $this->getDoctrine()->getManager();
         $em->persist($entity);
@@ -46,7 +46,7 @@ abstract class BaseController extends AbstractController implements InterfaceCon
         return $this->json($entity, 200, [], $groups);
     }
 
-    public function deleteEntity($id): JsonResponse
+    protected function deleteEntity($id): JsonResponse
     {
         $entity = $this->getDoctrine()->getManager()->getRepository($this->entity)->find($id);
         $em = $this->getDoctrine()->getManager();
