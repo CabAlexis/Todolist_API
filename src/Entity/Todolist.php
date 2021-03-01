@@ -35,13 +35,13 @@ class Todolist
 
     /**
      * @ORM\Column(type="datetime")
-     * @Groups({"category"})
+     * @Groups({"category", "todolist"})
      */
     private $createdAt;
 
     /**
-     * @ORM\OneToMany(targetEntity=Item::class, mappedBy="todolist", cascade={"persist"})
-     * @Groups({"todolist"})
+     * @ORM\OneToMany(targetEntity=Item::class, mappedBy="todolist", orphanRemoval=true)
+     * @Groups({"item"})
      */
     private $items;
 

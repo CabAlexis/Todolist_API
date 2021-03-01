@@ -5,12 +5,14 @@ namespace App\Controller;
 use App\Entity\Category;
 use App\Entity\Item;
 use App\Entity\Todolist;
+use Datetime;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Exception\NotEncodableValueException;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class TodolistController extends BaseController
@@ -22,30 +24,37 @@ class TodolistController extends BaseController
 
     /**
      * @Route("/todolists", name="todolists", methods={"GET"})
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function getTodolist(): JsonResponse
     {
-        $groups = ['groups' => 'todolist'];
-        return $this->getEntity($groups);
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title', 'description', 'category' => ['id', 'title']]];
+        return $this->getEntity($neededData);
     }
 
     /**
      * @Route("/todolist/{id}", name="one_todolist", methods={"GET"})
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function getOneTodolist($id): JsonResponse
     {
-        $groups = ['groups' => 'todolist'];
-        return $this->getOneEntity($id, $groups);
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title', 'description', 'category' => ['id', 'title']]];
+        return $this->getOneEntity($id, $neededData);
     }
 
     /**
      * @Route("/todolist", name="todolist_create", methods={"POST"})
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param \Symfony\Component\Serializer\SerializerInterface $serializer
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function createItem(Request $request, SerializerInterface $serializer): JsonResponse
     {
+        $data = $request->getContent();
+        $verif = json_decode($data);
+
         try {
-            $data = $request->getContent();
-            $verif = json_decode($data);
 
             if (isset($verif->title) && !is_string($verif->title)) {
                 $response = new JsonResponse();
@@ -60,10 +69,10 @@ class TodolistController extends BaseController
                 return $response;
             }
             $entity = $serializer->deserialize($data, Todolist::class, 'json', ['groups' => 'todolist']);
-            $entity->setCreatedAt(new \Datetime());
+            $entity->setCreatedAt(new Datetime());
             return $this->createEntity($entity);
         } catch (ErrorException $e) {
-            $response = new Response();
+            $response = new JsonResponse();
             $response->setStatusCode(400);
             $response->setContent('Syntax Error');
             return $response;
@@ -72,10 +81,13 @@ class TodolistController extends BaseController
 
     /**
      * @Route("/todolist/{id}", name="todolist_patch_update", methods={"PATCH"})
+     * @param $id
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function updateTodolist($id, Request $request): JsonResponse
     {
-        $groups = ['groups' => 'todolist'];
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title', 'description', 'category' => ['id', 'title']]];
         $entity = $this->getDoctrine()->getManager()->getRepository(Todolist::class)->find($id);
         $data = json_decode($request->getContent());
         $error = [];
@@ -103,6 +115,7 @@ class TodolistController extends BaseController
             if (isset($data->itemId)) {
                 if ($this->getDoctrine()->getManager()->getRepository(Item::class)->find($data->itemId) != null) {
                     $item = $this->getDoctrine()->getManager()->getRepository(Item::class)->find($data->itemId);
+                    $entity->addItem($item);
                 } else {
                     array_push($error, 'Item not found');
                 }
@@ -110,6 +123,7 @@ class TodolistController extends BaseController
             if (isset($data->categoryId)) {
                 if ($this->getDoctrine()->getManager()->getRepository(Category::class)->find($data->categoryId) != null) {
                     $category = $this->getDoctrine()->getManager()->getRepository(Category::class)->find($data->categoryId);
+                    $entity->setCategory($category);
                 } else {
                     array_push($error, 'Category not found');
                 }
@@ -120,10 +134,8 @@ class TodolistController extends BaseController
                 $response->setContent(implode(",", $error));
                 return $response;
             }
-            $entity->addItem($item);
-            $entity->setCategory($category);
-            return $this->updateEntity($id, $entity, $groups);
-        } catch (ErrorException $e) {
+            return $this->updateEntity($id, $entity, $neededData);
+        } catch (NotEncodableValueException $e) {
             $response = new JsonResponse();
             $response->setStatusCode(400);
             $response->setContent('Syntax Error');
@@ -133,6 +145,8 @@ class TodolistController extends BaseController
 
     /**
      * @Route("/todolist/{id}", name="todolist_delete", methods={"DELETE"})
+     * @param $id
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function deleteItem($id): JsonResponse
     {

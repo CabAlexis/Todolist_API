@@ -19,22 +19,36 @@ class ItemRepository extends ServiceEntityRepository
         parent::__construct($registry, Item::class);
     }
 
-    // /**
-    //  * @return Item[] Returns an array of Item objects
-    //  */
-    /*
-    public function findByExampleField($value)
+ 
+    public function listByTodolist($todolistId)
     {
-        return $this->createQueryBuilder('i')
-            ->andWhere('i.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('i.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
+        $queryBuilder = $this->createQueryBuilder('item');
+        $queryBuilder->innerJoin('item.todolist', 'todolist');
+        $queryBuilder->where(
+            $queryBuilder->expr()->eq('todolist.id', $todolistId)
+        );
+
+        $query = $queryBuilder->getQuery();
+
+        return $query->getResult();
     }
-    */
+
+    public function oneItemByTodolist($todolistId, $itemId)
+    {
+        $queryBuilder = $this->createQueryBuilder('item');
+        $queryBuilder->innerJoin('item.todolist', 'todolist');
+        $queryBuilder->where(
+            $queryBuilder->expr()->eq('todolist.id', $todolistId)
+        );
+        $queryBuilder->andWhere(
+            $queryBuilder->expr()->eq('item.id', $itemId)
+        );
+
+        $query = $queryBuilder->getQuery();
+
+        return $query->getResult();
+    }
+
 
     /*
     public function findOneBySomeField($value): ?Item
