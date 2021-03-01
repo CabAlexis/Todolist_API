@@ -5,11 +5,15 @@ namespace App\Controller;
 use App\Entity\Item;
 use App\Entity\Todolist;
 use App\Entity\User;
+use App\Repository\ItemRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class ItemController extends BaseController
@@ -21,162 +25,162 @@ class ItemController extends BaseController
 
     /**
      * @Route("/items", name="items", methods={"GET"})
+     * @return JsonResponse
      */
     public function getItems(): JsonResponse
     {
-        $groups = ['groups' => 'item'];
-        return BaseController::getEntity($groups);
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title', 'status','todolist' => ['id', 'title'], 'userItem' => ['id', 'username']]];
+        return $this->getEntity($neededData);
     }
 
     /**
      * @Route("/item/{id}", name="one_item", methods={"GET"})
+     * @param $id
+     * @return JsonResponse
      */
     public function getOneItem($id): JsonResponse
     {
-        $groups = ['groups' => 'item'];
-        return BaseController::getOneEntity($id, $groups);
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title', 'status','todolist' => ['id', 'title'], 'userItem' => ['id', 'username']]];
+        return $this->getOneEntity($id, $neededData);
     }
 
     /**
      * @Route("/item", name="item_create", methods={"POST"})
+     * @param Request $request
+     * @param SerializerInterface $serializer
+     * @return JsonResponse
      */
     public function createItem(Request $request, SerializerInterface $serializer): JsonResponse
     {
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title', 'status','todolist' => ['id', 'title'], 'userItem' => ['id', 'username']]];
+        $data = $request->getContent();
+        $verif = json_decode($data);
+
         try {
-            $data = $request->getContent();
 
-            $verif = json_decode($data);
-
-            if(isset($verif->title) && !is_string($verif->title)){
-                return $this->json([
-                    'status' => 400,
-                    'message' => 'Le titre doit obligatoirement etre une chaine de caractere.'
-                ]);
+            if (isset($verif->title) && !is_string($verif->title)) {
+                $response = new JsonResponse();
+                $response->setStatusCode(400);
+                $response->setContent('Le titre doit etre une chaine de caracteres');
+                return $response;
             }
 
-            $entity = $serializer->deserialize($data, Item::class, 'json', ['groups' => 'item']);
+            $entity = $serializer->deserialize($data, Item::class, 'json', $neededData);
 
             $entity->setStatus(false);
 
-            return BaseController::createEntity($entity);
+            return $this->createEntity($entity);
         }catch(NotEncodableValueException $e){
-            return $this->json([
-                'status' => 400,
-                'message' => $e->getMessage()
-            ]);
+            $response = new JsonResponse();
+            $response->setStatusCode(400);
+            $response->setContent('Syntax Error');
+            return $response;
         }
     }
 
     /**
-     * @Route("/item/{id}", name="item_update", methods={"PUT"})
-     */
-    public function updateCategory($id, Request $request): JsonResponse
-    {
-
-        $groups = ['groups' => 'item'];
-        $entity = $this->getDoctrine()->getManager()->getRepository(Item::class)->find($id);
-
-        try {
-            $data = json_decode($request->getContent());
-
-            if(isset($data->title) && !is_string($data->title)){
-                return $this->json([
-                    'status' => 400,
-                    'message' => 'Le titre doit obligatoirement etre une chaine de caractere.'
-                ]);
-            }
-            if(isset($data->status) && !is_bool($data->status)){
-                return $this->json([
-                    'status' => 400,
-                    'message' => 'Le statut doit etre un boolean'
-                ]);
-            }
-                $entity->setTitle($data->title);
-                $entity->setStatus($data->status);
-                $user = $this->getDoctrine()->getManager()->getRepository(User::class)->find($data->userId);
-                $todolist = $this->getDoctrine()->getManager()->getRepository(Todolist::class)->find($data->todolistId);
-            if (isset($user) && isset($todolist)) {
-                $entity->setUserItem($user);
-                $entity->setTodolist($todolist);
-            }
-            else{
-                return $this->json([
-                    'status' => 400,
-                    'message' => 'Utilisateur ou Todolist introuvable'
-                ]);
-            }
-            return BaseController::updateEntity($id, $entity, $groups);
-        }catch(NotEncodableValueException $e){
-            return $this->json([
-                'status' => 400,
-                'message' => $e->getMessage()
-            ]);
-        } 
-    }
-
-    /**
      * @Route("/item/{id}", name="item_patch_update", methods={"PATCH"})
+     * @param $id
+     * @param Request $request
+     * @return JsonResponse
      */
     public function patchItem($id, Request $request): JsonResponse
     {
-        $groups = ['groups' => 'item'];
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title', 'status','todolist' => ['id', 'title'], 'userItem' => ['id', 'username']]];
         $entity = $this->getDoctrine()->getManager()->getRepository(Item::class)->find($id);
-
-        try {
-            $data = json_decode($request->getContent());
-
-            if(isset($data->title) && !is_string($data->title)){
-                return $this->json([
-                    'status' => 400,
-                    'message' => 'Le titre doit obligatoirement etre une chaine de caractere.'
-                ]);
-            }
-            if(isset($data->status) && !is_bool($data->status)){
-                return $this->json([
-                    'status' => 400,
-                    'message' => 'Le statut doit etre un boolean'
-                ]);
-            }
-            if(isset($data->title)){
+        $data = json_decode($request->getContent());
+        $error = [];
+        if (isset($data->title)) {
+            if (!is_string($data->title)) {
+                $response = new JsonResponse();
+                $response->setStatusCode(400);
+                $response->setContent('Le titre doit etre une chaine de caracteres');
+                return $response;
+            } else {
                 $entity->setTitle($data->title);
             }
-            if(isset($data->status)){
+        }
+        if (isset($data->status)) {
+            if (!is_bool($data->status)) {
+                $response = new JsonResponse();
+                $response->setStatusCode(400);
+                $response->setContent('Le statut doit etre un boolean');
+                return $response;
+            } else {
                 $entity->setStatus($data->status);
             }
-            if(isset($data->userId)){
+        }
+        if (isset($data->userId)) {
+            if ($this->getDoctrine()->getManager()->getRepository(User::class)->find($data->userId) != null) {
                 $user = $this->getDoctrine()->getManager()->getRepository(User::class)->find($data->userId);
+                $entity->setUserItem($user);
+            } else {
+                array_push($error, 'User not found');
             }
-            if(isset($data->todolistId)){
+        }
+        if (isset($data->todolistId)) {
+            if ($this->getDoctrine()->getManager()->getRepository(Todolist::class)->find($data->todolistId) != null) {
                 $todolist = $this->getDoctrine()->getManager()->getRepository(Todolist::class)->find($data->todolistId);
-            }
-            if(isset($user) && isset($todolist)){
-                $entity->setUserItem($user);
                 $entity->setTodolist($todolist);
-            }elseif(isset($user) && !isset($todolist)){
-                $entity->setUserItem($user);
-            }elseif(!isset($user) && isset($todolist)){
-                $entity->setTodolist($todolist);
+            } else {
+                array_push($error, 'Todolist not found');
             }
-            else{
-                return $this->json([
-                    'status' => 400,
-                    'message' => 'Utilisateur ou Todolist introuvable'
-                ]);
-            }
-            return BaseController::updateEntity($id, $entity, $groups);
-        }catch(NotEncodableValueException $e){
-            return $this->json([
-                'status' => 400,
-                'message' => $e->getMessage()
-            ]);
-        } 
+        }
+        if (!empty($error)) {
+            $response = new JsonResponse();
+            $response->setStatusCode(404);
+            $response->setContent(implode(",", $error));
+            return $response;
+        }
+
+        return $this->updateEntity($id, $entity, $neededData);
+    }
+
+    /**
+     * @Route("/todolist/{todolistId}/items", name="todolist_items",
+     *     methods={"GET"})
+     * @param $todolistId
+     * @param ItemRepository $repo
+     * @return JsonResponse
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
+    public function getItemsByTodolist($todolistId, ItemRepository $repo):
+    JsonResponse
+    {
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title','status']];
+        $data = $repo->listByTodolist($todolistId);
+        $serializer = new Serializer([new ObjectNormalizer()]);
+        $selectedData = $serializer->normalize($data, null, $neededData);
+        return $this->json($selectedData);
+    }
+
+    /**
+     * @Route("/todolist/{todolistId}/item/{itemId}", name="todolist_item",
+     *     methods={"GET"})
+     * @param $todolistId
+     * @param $itemId
+     * @param ItemRepository $repo
+     * @return JsonResponse
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
+    public function getOneItemByTodolist($todolistId, $itemId, ItemRepository
+$repo):
+    JsonResponse
+    {
+        $neededData = [AbstractNormalizer::ATTRIBUTES => ['id','title','status']];
+        $data = $repo->oneItemByTodolist($todolistId, $itemId);
+        $serializer = new Serializer([new ObjectNormalizer()]);
+        $selectedData = $serializer->normalize($data, null, $neededData);
+        return $this->json($selectedData);
     }
 
     /**
      * @Route("/item/{id}", name="item_delete", methods={"DELETE"})
+     * @param $id
+     * @return JsonResponse
      */
     public function deleteItem($id): JsonResponse
     {
-        return BaseController::deleteEntity($id);
+        return $this->deleteEntity($id);
     }
 }
